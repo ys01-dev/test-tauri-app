@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import { deletePreset, updatePreset } from "../common"
 import { chara_name_data as Chara } from '../tables/chara_name_data'
 import { dress_name_data as Dress } from '../tables/dress_name_data'
@@ -14,10 +14,10 @@ export const SelectHomePreset: React.FC<{
     onApplyPresetClick: (data: umaHome) => void,
     onPresetClick: () => void
 }> = ({ presetData, selectedReplCharaData, selectedDressData, setModalVisible, onApplyPresetClick, onPresetClick }) => {
-    const [selectedPreset, setSelectedPreset] = React.useState<umaHome>(initUmaHome)
-    const [selectedRadio, setSelectedRadio] = React.useState<{ index: number, _id: string }>({ index: -1, _id: "" })
-    const [snackBarMessage, setSnackBarMessage] = React.useState("")
-    const [snackBarVisible, setSnackBarVisible] = React.useState(false)
+    const [selectedPreset, setSelectedPreset] = useState<umaHome>(initUmaHome)
+    const [selectedRadio, setSelectedRadio] = useState<{ index: number, _id: string }>({ index: 0, _id: "" })
+    const [snackBarMessage, setSnackBarMessage] = useState("")
+    const [snackBarVisible, setSnackBarVisible] = useState(false)
 
     const showSnackBar = (message: string) => {
         setSnackBarMessage(message)
@@ -29,15 +29,14 @@ export const SelectHomePreset: React.FC<{
         if (selectedRadio.index < 0) {
             showSnackBar("preset isn't selected")
             return
-        } else if(selectedReplCharaData.id === 0 || selectedDressData.id === 0) {
+        } else if (selectedReplCharaData.id === 0 || selectedDressData.id === 0) {
             showSnackBar("character or dress isn't selected")
             return
         }
         let ret
 
         try {
-            ret = await updatePreset("updateHomePreset", {
-                col: umamusumeDoc.uma_home,
+            ret = await updatePreset(umamusumeDoc.uma_home, {
                 _id: selectedRadio._id,
                 charaID: selectedReplCharaData.id,
                 charaName: selectedReplCharaData.chara_name,
@@ -46,8 +45,8 @@ export const SelectHomePreset: React.FC<{
                 dressDesc: selectedDressData.dress_desc
             })
             onPresetClick()
-        } catch(err) {
-            ret =err
+        } catch (err) {
+            ret = err
         }
         showSnackBar(ret)
     }
@@ -57,9 +56,9 @@ export const SelectHomePreset: React.FC<{
             showSnackBar("preset isn't selected")
         } else if (window.confirm("are you sure to delete?")) {
             let ret
-            
+
             try {
-                ret = await deletePreset({ col: umamusumeDoc.uma_home, _id: selectedRadio._id })
+                ret = await deletePreset(umamusumeDoc.uma_home, selectedRadio._id)
                 onPresetClick()
             } catch (err) {
                 ret = err
@@ -112,11 +111,11 @@ export const SelectLivePreset: React.FC<{
     onApplyPresetClick: (data: umaLive) => void,
     onPresetClick: () => void
 }> = ({ presetData, selectedLiveCharaArr, setModalVisible, onApplyPresetClick, onPresetClick }) => {
-    const [selectedPreset, setSelectedPreset] = React.useState<umaLive>({...initUmaLive})
-    const [selectedPresetIndex, setSelectedPresetIndex] = React.useState<number>(-1)
-    const [selectedPresetIndexObj, setSelectedPresetIndexObj] = React.useState<{[prop: string]: number}>({})
-    const [snackBarMessage, setSnackBarMessage] = React.useState("")
-    const [snackBarVisible, setSnackBarVisible] = React.useState(false)
+    const [selectedPreset, setSelectedPreset] = useState<umaLive>({ ...initUmaLive })
+    const [selectedPresetIndex, setSelectedPresetIndex] = useState<number>(-1)
+    const [selectedPresetIndexObj, setSelectedPresetIndexObj] = useState<{ [prop: string]: number }>({})
+    const [snackBarMessage, setSnackBarMessage] = useState("")
+    const [snackBarVisible, setSnackBarVisible] = useState(false)
 
     const showSnackBar = (message: string) => {
         setSnackBarMessage(message)
@@ -132,14 +131,13 @@ export const SelectLivePreset: React.FC<{
         let ret
 
         try {
-            ret = await updatePreset("updateLivePreset", {
-                col: umamusumeDoc.uma_live,
+            ret = await updatePreset(umamusumeDoc.uma_live, {
                 _id: selectedPreset._id,
                 data: selectedLiveCharaArr
             })
             onPresetClick()
-        } catch(err) {
-            ret =err
+        } catch (err) {
+            ret = err
         }
         showSnackBar(ret)
     }
@@ -151,7 +149,7 @@ export const SelectLivePreset: React.FC<{
             let ret
 
             try {
-                ret = await deletePreset({ col: umamusumeDoc.uma_live, _id: selectedPreset._id })
+                ret = await deletePreset(umamusumeDoc.uma_live, selectedPreset._id)
                 onPresetClick()
             } catch (err) {
                 ret = err
@@ -161,20 +159,20 @@ export const SelectLivePreset: React.FC<{
     }
 
     const onPresetRadioClick = (index: number) => {
-        let obj = (({...p}) => {
+        let obj = (({ ...p }) => {
             selectedPresetIndexObj.hasOwnProperty(index.toString()) ? delete p[index.toString()] : p[index.toString()] = index
             return p
-        })({...selectedPresetIndexObj})
+        })({ ...selectedPresetIndexObj })
 
         setSelectedPresetIndex(index)
         setSelectedPresetIndexObj(obj)
     }
 
     const onExpandClick = () => {
-        const tmp: {[prop: string]: number} = {}
+        const tmp: { [prop: string]: number } = {}
         setSelectedPresetIndexObj({})
-        
-        if(selectedPreset.data.length !== Object.keys(selectedPresetIndexObj).length) {
+
+        if (selectedPreset.data.length !== Object.keys(selectedPresetIndexObj).length) {
             selectedPreset.data.forEach((_, index) => tmp[index.toString()] = index)
             setSelectedPresetIndexObj(tmp)
         }

@@ -54,4 +54,3 @@ export const initUmaLive = {
         { originalCharaID: 0, originalCharaName: "", replCharaID: 0, replCharaName: "", dressID: 0, dressName: "", }
     ]
 }
-

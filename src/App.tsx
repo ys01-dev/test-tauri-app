@@ -5,7 +5,6 @@ import SearchUma from './component/searchUma'
 import SearchUma2 from './component/searchUma2'
 import { setWidth } from "./store"
 import './css/App.css'
-import logo from "./image/logo.png";
 
 function App() {
     const dispatch = useDispatch()
@@ -31,7 +30,6 @@ function App() {
             <button className="btn_sideBarVisible" onClick={onSideBarVisible}>≡</button>
             <div className="sidebarContainer">
                 <motion.nav className="sidebar" initial={{ x: 0 }} animate={isSideBarOpened ? "opened" : "closed"} variants={variants}>
-                    <img src={logo} alt="" />
                     <ul>
                         <li>
                             <button onClick={() => { setSelected(0) }} style={{ backgroundColor: selected === 0 ? "#c6edff" : "" }}>→HomeChara</button>

@@ -5,11 +5,13 @@
 mod mongo;
 mod pg;
 
-use mongo::{getMongoClient, Uma_home, Uma_live};
+use bson::oid::ObjectId;
+use futures::TryStreamExt;
+use mongo::{getMongoClient, param_Uma_home, param_Uma_live, Uma_home, Uma_live};
 use mongodb::bson::doc;
 use pg::{chara_name_data, dress_name_data, getCharaDml, getConnStr, getDressDml};
 use postgres::{Client, NoTls};
-use futures::TryStreamExt;
+use std::str::FromStr;
 
 #[tauri::command]
 fn getCharaData(name: String) -> Result<String, pg::PGError> {
@@ -54,16 +56,109 @@ fn getDressData(name: String) -> Result<String, pg::PGError> {
 
 #[tauri::command]
 async fn getHomePreset() -> Result<String, mongo::MongoError> {
-    let coll = getMongoClient().await?.database("local").collection::<Uma_home>("uma_home");
-    let data = coll.find(doc! {}, None).await?.try_collect::<Vec<Uma_home>>().await?;
+    let coll = getMongoClient()
+        .await?
+        .database("local")
+        .collection::<Uma_home>("uma_home");
+    let data = coll
+        .find(doc! {}, None)
+        .await?
+        .try_collect::<Vec<Uma_home>>()
+        .await?;
     Ok(serde_json::to_string(&data)?)
 }
 
 #[tauri::command]
 async fn getLivePreset() -> Result<String, mongo::MongoError> {
-    let coll = getMongoClient().await?.database("local").collection::<Uma_live>("uma_live");
-    let data = coll.find(doc! {}, None).await?.try_collect::<Vec<Uma_live>>().await?;
+    let coll = getMongoClient()
+        .await?
+        .database("local")
+        .collection::<Uma_live>("uma_live");
+    let data = coll
+        .find(doc! {}, None)
+        .await?
+        .try_collect::<Vec<Uma_live>>()
+        .await?;
     Ok(serde_json::to_string(&data)?)
+}
+
+#[tauri::command]
+async fn saveHomePreset(param: param_Uma_home) -> Result<String, mongo::MongoError> {
+    getMongoClient()
+        .await?
+        .database("local")
+        .collection::<param_Uma_home>("uma_home")
+        .insert_one(param, None)
+        .await?;
+    Ok("successfully saved a preset".into())
+}
+
+#[tauri::command]
+async fn saveLivePreset(param: param_Uma_live) -> Result<String, mongo::MongoError> {
+    getMongoClient()
+        .await?
+        .database("local")
+        .collection::<param_Uma_live>("uma_live")
+        .insert_one(param, None)
+        .await?;
+    Ok("successfully saved a preset".into())
+}
+
+#[tauri::command]
+async fn updateHomePreset(param: Uma_home) -> Result<String, mongo::MongoError> {
+    getMongoClient()
+        .await?
+        .database("local")
+        .collection::<Uma_home>("uma_home")
+        .update_one(
+            doc! {"_id": 1},
+            doc! {"$set": bson::to_document(&param)?},
+            None,
+        )
+        .await?;
+    Ok("preset has been changed".into())
+}
+
+#[tauri::command]
+async fn updateLivePreset(param: Uma_live) -> Result<String, mongo::MongoError> {
+    getMongoClient()
+        .await?
+        .database("local")
+        .collection::<Uma_live>("uma_live")
+        .update_one(
+            doc! {"_id": &param._id},
+            doc! {"$set": bson::to_document(&param)?},
+            None,
+        )
+        .await?;
+    Ok("preset has been changed".into())
+}
+
+#[tauri::command]
+async fn deleteHomePreset(id: ObjectId) -> Result<String, mongo::MongoError> {
+    getMongoClient()
+        .await?
+        .database("local")
+        .collection::<Uma_home>("uma_home")
+        .delete_one(doc! {"_id": id}, None)
+        .await?;
+    Ok("selected preset has been deleted".into())
+}
+
+#[tauri::command]
+async fn deleteLivePreset(id: ObjectId) -> Result<String, mongo::MongoError> {
+    getMongoClient()
+        .await?
+        .database("local")
+        .collection::<Uma_live>("uma_live")
+        .delete_one(doc! {"_id": id}, None)
+        .await?;
+    Ok("selected preset has been deleted".into())
+}
+
+#[tauri::command]
+async fn changeConfig() -> Result<String, mongo::MongoError> {
+    Ok("".into())
 }
 
 fn main() {
@@ -77,7 +172,14 @@ fn main() {
             getCharaData,
             getDressData,
             getHomePreset,
-            getLivePreset
+            getLivePreset,
+            saveHomePreset,
+            saveLivePreset,
+            updateHomePreset,
+            updateLivePreset,
+            deleteHomePreset,
+            deleteLivePreset,
+            changeConfig
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

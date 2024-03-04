@@ -1,60 +1,60 @@
 import { tauri } from '@tauri-apps/api'
-import axios from 'axios'
+import { umamusumeDoc } from './tables/umamusume';
 
-export const targetUrl = "http://192.168.11.2:4000/"
+export const changeConfig = (target: string, param: {}) => {
+    let fn = ""
+    switch (target) {
+        case "home": fn = ""; break;
+        case "live": fn = ""; break;
+        default: return;
+    }
+    return tauri.invoke<any>(fn, param).then(res => JSON.parse(res))
+}
 
 export const getCharaData = (name: string): Promise<any> => {
-    return tauri.invoke<any>("getCharaData", {name: name}).then(res => JSON.parse(res))
+    return tauri.invoke<any>("getCharaData", { name: name }).then(res => JSON.parse(res))
 }
 
 export const getDressData = (name: string): Promise<any> => {
-    return tauri.invoke<any>("getDressData", {name: name}).then(res => JSON.parse(res))
+    return tauri.invoke<any>("getDressData", { name: name }).then(res => JSON.parse(res))
 }
 
-export const changeConfig = (url: string, param: {}) => {
-    return new Promise<any>((resolve, rejects) => {
-        axios.post(targetUrl + url, param
-        ).then(res => resolve(res.data.message)
-        ).catch(err => rejects(err.response === undefined ? err.message : err.response.data.message))
-    })
-}
-
-export const getPreset = (target: string) => {
+export const getPreset = (target: umamusumeDoc) => {
     let fn = ""
     switch (target) {
-        case "home": fn = "getHomePreset"; break;
-        case "live": fn = "getLivePreset"; break;
-        default: return;
+        case umamusumeDoc.uma_home: fn = "getHomePreset"; break;
+        case umamusumeDoc.uma_live: fn = "getLivePreset"; break;
+        default: throw new Error("invalid request recieved")
     }
     return tauri.invoke<any>(fn).then(res => JSON.parse(res))
 }
 
-export const savePreset = (url: string, param: {}) => {
-    return new Promise<any>((resolve, rejects) => {
-        axios.post(targetUrl + url, param).then(res => {
-            resolve(res.data.message)
-        }).catch(err => {
-            rejects(err.response === undefined ? err.message : err.response.data.message)
-        })
-    })
+export const savePreset = (target: umamusumeDoc, param: any): Promise<any> => {
+    let fn = ""
+    switch (target) {
+        case umamusumeDoc.uma_home: fn = "saveHomePreset"; break;
+        case umamusumeDoc.uma_live: fn = "saveLivePreset"; break;
+        default: throw new Error("invalid request recieved")
+    }
+    return tauri.invoke<any>(fn, { param: param })
 }
 
-export const updatePreset = (url: string, param: {}) => {
-    return new Promise<any>((resolve, rejects) => {
-        axios.patch(targetUrl + url, param).then(res => {
-            resolve(res.data.message)
-        }).catch(err => {
-            rejects(err.response === undefined ? err.message : err.response.data.message)
-        })
-    })
+export const updatePreset = (target: umamusumeDoc, param: {}) => {
+    let fn = ""
+    switch (target) {
+        case umamusumeDoc.uma_home: fn = "updateHomePreset"; break;
+        case umamusumeDoc.uma_live: fn = "updateLivePreset"; break;
+        default: throw new Error("invalid request recieved")
+    }
+    return tauri.invoke<any>(fn, { param: param })
 }
 
-export const deletePreset = (param: {}) => {
-    return new Promise<any>((resolve, rejects) => {
-        axios.delete(targetUrl + "deletePreset", { data: param }).then(res => {
-            resolve(res.data.message)
-        }).catch(err => {
-            rejects(err.response === undefined ? err.message : err.response.data.message)
-        })
-    })
+export const deletePreset = (target: umamusumeDoc, id: string) => {
+    let fn = ""
+    switch (target) {
+        case umamusumeDoc.uma_home: fn = "deleteHomePreset"; break;
+        case umamusumeDoc.uma_live: fn = "deleteLivePreset"; break;
+        default: throw new Error("invalid request recieved")
+    }
+    return tauri.invoke<any>(fn, { id: id })
 }

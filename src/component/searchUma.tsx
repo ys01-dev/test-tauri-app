@@ -86,30 +86,26 @@ const SearchUma = () => {
     const onPresetClick = async () => {
         if (!isModalVisible) setModalVisible(true)
         try {
-            setPreset(await getPreset("home"))
+            setPreset(await getPreset(umamusumeDoc.uma_home))
         } catch (err: any) {
             showSnackBar(err)
         }
-        return 1
     }
 
     const onSavePresetClick = async () => {
         if (selectedReplCharaData.id === 0 || selectedDressData.id === 0) {
-            showSnackBar("character or dress isn't selected")
+            showSnackBar("any character or dress isn't selected")
             return
         }
         let ret
 
         try {
-            ret = await savePreset("saveHomePreset", {
-                col: umamusumeDoc.uma_home,
-                data: {
-                    charaID: selectedReplCharaData.id,
-                    charaName: selectedReplCharaData.chara_name,
-                    dressID: selectedDressData.id,
-                    dressName: selectedDressData.dress_name,
-                    dressDesc: selectedDressData.dress_desc
-                }
+            ret = await savePreset(umamusumeDoc.uma_home, {
+                charaID: selectedReplCharaData.id,
+                charaName: selectedReplCharaData.chara_name,
+                dressID: selectedDressData.id,
+                dressName: selectedDressData.dress_name,
+                dressDesc: selectedDressData.dress_desc
             })
         } catch (err) {
             ret = err

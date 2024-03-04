@@ -102,7 +102,7 @@ const SearchUma2 = () => {
     const onPresetClick = async () => {
         if (!isModalVisible) setModalVisible(true)
         try {
-            setPreset(await getPreset("live"))
+            setPreset(await getPreset(umamusumeDoc.uma_live))
         } catch (err: any) {
             showSnackBar(err)
         }
@@ -112,10 +112,7 @@ const SearchUma2 = () => {
         let ret
 
         try {
-            ret = await savePreset("saveLivePreset", {
-                col: umamusumeDoc.uma_live,
-                data: [liveChara1, liveChara2, liveChara3, liveChara4, liveChara5]
-            })
+            ret = await savePreset(umamusumeDoc.uma_live, { data: [liveChara1, liveChara2, liveChara3, liveChara4, liveChara5] })
         } catch (err) {
             ret = err
         }
@@ -246,7 +243,7 @@ const SearchUma2 = () => {
                 </div>
             </div>
             <button onClick={onApplyChangesClick} className="btnApplyChanges">apply</button>
-            <SnackBar message={snackBarMessage} visible={snackBarVisible} setVisible={setSnackBarVisible}/>
+            <SnackBar message={snackBarMessage} visible={snackBarVisible} setVisible={setSnackBarVisible} />
         </div>
     )
 }
