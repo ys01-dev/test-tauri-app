@@ -4,6 +4,7 @@
 
 mod mongo;
 mod pg;
+mod config_type;
 
 use bson::oid::ObjectId;
 use futures::TryStreamExt;
@@ -11,7 +12,6 @@ use mongo::{getMongoClient, param_Uma_home, param_Uma_live, Uma_home, Uma_live};
 use mongodb::bson::doc;
 use pg::{chara_name_data, dress_name_data, getCharaDml, getConnStr, getDressDml};
 use postgres::{Client, NoTls};
-use std::str::FromStr;
 
 #[tauri::command]
 fn getCharaData(name: String) -> Result<String, pg::PGError> {
@@ -111,7 +111,7 @@ async fn updateHomePreset(param: Uma_home) -> Result<String, mongo::MongoError> 
         .database("local")
         .collection::<Uma_home>("uma_home")
         .update_one(
-            doc! {"_id": 1},
+            doc! {"_id": &param._id},
             doc! {"$set": bson::to_document(&param)?},
             None,
         )

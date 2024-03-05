@@ -11,50 +11,50 @@ export const changeConfig = (target: string, param: {}) => {
     return tauri.invoke<any>(fn, param).then(res => JSON.parse(res))
 }
 
-export const getCharaData = (name: string): Promise<any> => {
-    return tauri.invoke<any>("getCharaData", { name: name }).then(res => JSON.parse(res))
+export const getCharaData = async (name: string) => {
+    return await tauri.invoke<any>("getCharaData", { name: name }).then(res => JSON.parse(res))
 }
 
-export const getDressData = (name: string): Promise<any> => {
-    return tauri.invoke<any>("getDressData", { name: name }).then(res => JSON.parse(res))
+export const getDressData = async (name: string) => {
+    return await tauri.invoke<any>("getDressData", { name: name }).then(res => JSON.parse(res))
 }
 
-export const getPreset = (target: umamusumeDoc) => {
+export const getPreset = async (target: umamusumeDoc) => {
     let fn = ""
     switch (target) {
         case umamusumeDoc.uma_home: fn = "getHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "getLivePreset"; break;
         default: throw new Error("invalid request recieved")
     }
-    return tauri.invoke<any>(fn).then(res => JSON.parse(res))
+    return await tauri.invoke<any>(fn).then(res => JSON.parse(res))
 }
 
-export const savePreset = (target: umamusumeDoc, param: any): Promise<any> => {
+export const savePreset = async (target: umamusumeDoc, param: any) => {
     let fn = ""
     switch (target) {
         case umamusumeDoc.uma_home: fn = "saveHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "saveLivePreset"; break;
         default: throw new Error("invalid request recieved")
     }
-    return tauri.invoke<any>(fn, { param: param })
+    return await tauri.invoke<any>(fn, { param: param })
 }
 
-export const updatePreset = (target: umamusumeDoc, param: {}) => {
+export const updatePreset = async (target: umamusumeDoc, param: {}) => {
     let fn = ""
     switch (target) {
         case umamusumeDoc.uma_home: fn = "updateHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "updateLivePreset"; break;
         default: throw new Error("invalid request recieved")
     }
-    return tauri.invoke<any>(fn, { param: param })
+    return await tauri.invoke<any>(fn, { param: param })
 }
 
-export const deletePreset = (target: umamusumeDoc, id: string) => {
+export const deletePreset = async (target: umamusumeDoc, id: string) => {
     let fn = ""
     switch (target) {
         case umamusumeDoc.uma_home: fn = "deleteHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "deleteLivePreset"; break;
         default: throw new Error("invalid request recieved")
     }
-    return tauri.invoke<any>(fn, { id: id })
+    return await tauri.invoke<any>(fn, { id: id })
 }

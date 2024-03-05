@@ -5,6 +5,7 @@ import { dress_name_data as Dress } from '../tables/dress_name_data'
 import { umamusumeDoc, initUmaHome, umaLive, initUmaLive, umaHome, umaLiveChara } from '../tables/umamusume'
 import { SnackBar, sleep } from './snackbar';
 import "../css/modal.css"
+import { dialog } from '@tauri-apps/api'
 
 export const SelectHomePreset: React.FC<{
     presetData: umaHome[],
@@ -15,7 +16,7 @@ export const SelectHomePreset: React.FC<{
     onPresetClick: () => void
 }> = ({ presetData, selectedReplCharaData, selectedDressData, setModalVisible, onApplyPresetClick, onPresetClick }) => {
     const [selectedPreset, setSelectedPreset] = useState<umaHome>(initUmaHome)
-    const [selectedRadio, setSelectedRadio] = useState<{ index: number, _id: string }>({ index: 0, _id: "" })
+    const [selectedRadio, setSelectedRadio] = useState<{ index: number, _id: string }>({ index: -1, _id: "" })
     const [snackBarMessage, setSnackBarMessage] = useState("")
     const [snackBarVisible, setSnackBarVisible] = useState(false)
 
@@ -37,7 +38,7 @@ export const SelectHomePreset: React.FC<{
 
         try {
             ret = await updatePreset(umamusumeDoc.uma_home, {
-                _id: selectedRadio._id,
+                _id: selectedPreset._id,
                 charaID: selectedReplCharaData.id,
                 charaName: selectedReplCharaData.chara_name,
                 dressID: selectedDressData.id,
@@ -54,7 +55,7 @@ export const SelectHomePreset: React.FC<{
     const onDeleteClick = async () => {
         if (selectedRadio.index < 0) {
             showSnackBar("preset isn't selected")
-        } else if (window.confirm("are you sure to delete?")) {
+        } else if (await dialog.ask("are you sure to delete?", { title: 'confirmation', type: 'warning'})) {
             let ret
 
             try {
@@ -81,12 +82,12 @@ export const SelectHomePreset: React.FC<{
                 <div className="presetContainer">
                     {Array.isArray(presetData) && presetData.length > 0 && (
                         <ul>
-                            {presetData.map((data, index) =>
+                            {presetData.map((preset, index) =>
                                 <li key={index}>
                                     <label key={index}>
-                                        <input type="radio" name="presetRadio" value={data._id} onChange={() => onPresetRadioChange(index, data)} />
-                                        {`${data.charaID}:${data.charaName === "" ? "n/a" : data.charaName}
-                                        (${data.dressID}:${data.dressName === "" ? "n/a" : data.dressName})`}
+                                        <input type="radio" name="presetRadio" value={preset._id} onChange={() => onPresetRadioChange(index, preset)} />
+                                        {`${preset.charaID}:${preset.charaName === "" ? "n/a" : preset.charaName}
+                                        (${preset.dressID}:${preset.dressName === "" ? "n/a" : preset.dressName})`}
                                     </label>
                                 </li>
                             )}
@@ -129,7 +130,7 @@ export const SelectLivePreset: React.FC<{
             return
         }
         let ret
-
+        
         try {
             ret = await updatePreset(umamusumeDoc.uma_live, {
                 _id: selectedPreset._id,
@@ -145,7 +146,7 @@ export const SelectLivePreset: React.FC<{
     const onDeleteClick = async () => {
         if (selectedPresetIndex < 0) {
             showSnackBar("preset isn't selected")
-        } else if (window.confirm("are you sure to delete?")) {
+        } else if (await dialog.ask("are you sure to delete?", { title: 'confirmation', type: 'warning'})) {
             let ret
 
             try {

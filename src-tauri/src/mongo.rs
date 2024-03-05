@@ -18,7 +18,7 @@ pub struct Uma_home {
     pub charaName: String,
     pub dressID: i32,
     pub dressName: String,
-    pub dressDesc: String,
+    pub dressDesc: String
 }
 
 #[readonly::make]
@@ -28,7 +28,7 @@ pub struct param_Uma_home {
     pub charaName: String,
     pub dressID: i32,
     pub dressName: String,
-    pub dressDesc: String,
+    pub dressDesc: String
 }
 
 #[readonly::make]
@@ -39,20 +39,20 @@ pub struct Uma_live_chara {
     pub replCharaID: i32,
     pub replCharaName: String,
     pub dressID: i32,
-    pub dressName: String,
+    pub dressName: String
 }
 
 #[readonly::make]
 #[derive(Serialize, Deserialize)]
 pub struct Uma_live {
     pub _id: Option<ObjectId>,
-    pub data: Vec<Uma_live_chara>,
+    pub data: Vec<Uma_live_chara>
 }
 
 #[readonly::make]
 #[derive(Serialize, Deserialize)]
 pub struct param_Uma_live {
-    pub data: Vec<Uma_live_chara>,
+    pub data: Vec<Uma_live_chara>
 }
 
 #[derive(Debug, thiserror::Error)]
