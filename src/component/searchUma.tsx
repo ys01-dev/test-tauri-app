@@ -68,14 +68,16 @@ const SearchUma = () => {
     const onApplyChangesClick = async () => {
         let ret
         try {
-            ret = await changeConfig("homeJson", {
-                orgCharaID: selectedOrgCharaData.id,
-                charaID: selectedReplCharaData.id,
-                dressId: selectedDressData.id,
-                option: {
-                    isEnableCharaRepl: isEnableCharaRepl,
-                    isOriginalCharaCheck: isOriginalCharaCheck,
-                }
+            ret = await changeConfig(umamusumeDoc.uma_home, {
+                enable: isEnableCharaRepl,
+                data: [
+                    {
+                        origCharId: selectedOrgCharaData.id,
+                        newChrId: selectedReplCharaData.id,
+                        newClothId: selectedDressData.id,
+                    }
+                ],
+                isOrgChange: isOriginalCharaCheck
             })
         } catch (err) {
             ret = err

@@ -81,17 +81,16 @@ const SearchUma2 = () => {
     const onApplyChangesClick = async () => {
         let ret
         try {
-            ret = await changeConfig("liveJson", {
-                liveCharas: [
-                    { origCharId: liveChara1.originalCharaID, newChrId: liveChara1.replCharaID, newClothId: liveChara1.dressID },
-                    { origCharId: liveChara2.originalCharaID, newChrId: liveChara2.replCharaID, newClothId: liveChara2.dressID },
-                    { origCharId: liveChara3.originalCharaID, newChrId: liveChara3.replCharaID, newClothId: liveChara3.dressID },
-                    { origCharId: liveChara4.originalCharaID, newChrId: liveChara4.replCharaID, newClothId: liveChara4.dressID },
-                    { origCharId: liveChara5.originalCharaID, newChrId: liveChara5.replCharaID, newClothId: liveChara5.dressID }
-                ],
-                option: {
-                    isEnableCharaRepl: isEnableCharaRepl
-                }
+            ret = await changeConfig(umamusumeDoc.uma_live, {
+                enable: isEnableCharaRepl,
+                replaceUniversal: true,
+                data: [
+                    { origCharId: liveChara1.originalCharaID, newChrId: liveChara1.replCharaID, newClothId: liveChara1.dressID, replaceMini: false },
+                    { origCharId: liveChara2.originalCharaID, newChrId: liveChara2.replCharaID, newClothId: liveChara2.dressID, replaceMini: false },
+                    { origCharId: liveChara3.originalCharaID, newChrId: liveChara3.replCharaID, newClothId: liveChara3.dressID, replaceMini: false },
+                    { origCharId: liveChara4.originalCharaID, newChrId: liveChara4.replCharaID, newClothId: liveChara4.dressID, replaceMini: false },
+                    { origCharId: liveChara5.originalCharaID, newChrId: liveChara5.replCharaID, newClothId: liveChara5.dressID, replaceMini: false }
+                ]
             })
         } catch (err) {
             ret = err

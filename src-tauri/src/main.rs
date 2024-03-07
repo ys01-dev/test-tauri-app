@@ -2,16 +2,21 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(non_snake_case)]
 
+mod config_type;
 mod mongo;
 mod pg;
-mod config_type;
+mod _string;
 
+use crate::config_type::ReplaceGlobalChar;
 use bson::oid::ObjectId;
+use config_type::{Config_json, Param_ReplaceHomeStandChar, ReplaceGlobalChar_data};
 use futures::TryStreamExt;
-use mongo::{getMongoClient, param_Uma_home, param_Uma_live, Uma_home, Uma_live};
+use mongo::{getMongoClient, Param_Uma_home, Param_Uma_live, Uma_home, Uma_live};
 use mongodb::bson::doc;
 use pg::{chara_name_data, dress_name_data, getCharaDml, getConnStr, getDressDml};
 use postgres::{Client, NoTls};
+use std::io::BufWriter;
+use std::{fs::File, io::BufReader};
 
 #[tauri::command]
 fn getCharaData(name: String) -> Result<String, pg::PGError> {
@@ -83,22 +88,22 @@ async fn getLivePreset() -> Result<String, mongo::MongoError> {
 }
 
 #[tauri::command]
-async fn saveHomePreset(param: param_Uma_home) -> Result<String, mongo::MongoError> {
+async fn saveHomePreset(param: Param_Uma_home) -> Result<String, mongo::MongoError> {
     getMongoClient()
         .await?
         .database("local")
-        .collection::<param_Uma_home>("uma_home")
+        .collection::<Param_Uma_home>("uma_home")
         .insert_one(param, None)
         .await?;
     Ok("successfully saved a preset".into())
 }
 
 #[tauri::command]
-async fn saveLivePreset(param: param_Uma_live) -> Result<String, mongo::MongoError> {
+async fn saveLivePreset(param: Param_Uma_live) -> Result<String, mongo::MongoError> {
     getMongoClient()
         .await?
         .database("local")
-        .collection::<param_Uma_live>("uma_live")
+        .collection::<Param_Uma_live>("uma_live")
         .insert_one(param, None)
         .await?;
     Ok("successfully saved a preset".into())
@@ -156,18 +161,59 @@ async fn deleteLivePreset(id: ObjectId) -> Result<String, mongo::MongoError> {
     Ok("selected preset has been deleted".into())
 }
 
+#[warn(unused_variables)]
 #[tauri::command]
-async fn changeConfig() -> Result<String, mongo::MongoError> {
-    Ok("".into())
+fn changeConfigHome(param: Param_ReplaceHomeStandChar) -> Result<String, config_type::ConfigError> {
+    let file = File::open(_string::CONFIG_PATH)?;
+    let mut configJson = serde_json::from_reader::<BufReader<File>, Config_json>(BufReader::new(file))?;
+
+    configJson.replaceHomeStandChar.enable = param.enable;
+    if param.enable {
+        if param.isOrgChange {
+            if match param.data.get(0) {
+                    Some(_) => 1,
+                    None => -1
+                } < 0 || match configJson.replaceHomeStandChar.data.get(0) {
+                        Some(_) => 1,
+                        None => -1
+                } < 0
+            {
+                return Err(config_type::ConfigError::JsonParseError);
+            };
+            configJson.replaceHomeStandChar.data.get_mut(0).unwrap().origCharId = param.data.get(0).unwrap().origCharId;
+        };
+        configJson.replaceHomeStandChar.data.get_mut(0).unwrap().newChrId = param.data.get(0).unwrap().newChrId;
+        configJson.replaceHomeStandChar.data.get_mut(0).unwrap().newClothId = param.data.get(0).unwrap().newClothId;
+    }
+
+    let targetFile = File::create(_string::CONFIG_PATH)?;
+    serde_json::to_writer(BufWriter::new(targetFile), &configJson)?;
+    Ok("successfully home settings have been changed".into())
+}
+
+#[tauri::command]
+fn changeConfigLive(param: ReplaceGlobalChar) -> Result<String, config_type::ConfigError> {
+    let file = File::open(_string::CONFIG_PATH)?;
+    let mut configJson = serde_json::from_reader::<BufReader<File>, Config_json>(BufReader::new(file))?;
+
+    configJson.replaceGlobalChar.enable = param.enable;
+    if param.enable {
+        let mut data = Vec::<ReplaceGlobalChar_data>::new();
+        for item in param.data {
+            if item.newChrId != 0 && item.newClothId != 0 && item.origCharId != 0 {
+                data.push(item);
+            };
+        };
+        configJson.replaceGlobalChar.data = data;
+    }
+
+    let targetFile = File::create(_string::CONFIG_PATH)?;
+    serde_json::to_writer(BufWriter::new(targetFile), &configJson)?;
+    Ok("successfully live settings have been changed".into())
 }
 
 fn main() {
     tauri::Builder::default()
-        // .setup(|app| {
-        //     let pool = pg::getpool();
-        //     app.manage(pool);
-        //     Ok(())
-        // })
         .invoke_handler(tauri::generate_handler![
             getCharaData,
             getDressData,
@@ -179,7 +225,8 @@ fn main() {
             updateLivePreset,
             deleteHomePreset,
             deleteLivePreset,
-            changeConfig
+            changeConfigHome,
+            changeConfigLive
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

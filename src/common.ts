@@ -1,14 +1,14 @@
 import { tauri } from '@tauri-apps/api'
 import { umamusumeDoc } from './tables/umamusume';
 
-export const changeConfig = (target: string, param: {}) => {
+export const changeConfig = async (target: umamusumeDoc, param: {}) => {
     let fn = ""
     switch (target) {
-        case "home": fn = ""; break;
-        case "live": fn = ""; break;
-        default: return;
+        case umamusumeDoc.uma_home: fn = "changeConfigHome"; break;
+        case umamusumeDoc.uma_live: fn = "changeConfigLive"; break;
+        default: throw new Error("recieved invalid request")
     }
-    return tauri.invoke<any>(fn, param).then(res => JSON.parse(res))
+    return await tauri.invoke<any>(fn, { param: param })
 }
 
 export const getCharaData = async (name: string) => {
@@ -24,7 +24,7 @@ export const getPreset = async (target: umamusumeDoc) => {
     switch (target) {
         case umamusumeDoc.uma_home: fn = "getHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "getLivePreset"; break;
-        default: throw new Error("invalid request recieved")
+        default: throw new Error("recieved invalid request")
     }
     return await tauri.invoke<any>(fn).then(res => JSON.parse(res))
 }
@@ -34,7 +34,7 @@ export const savePreset = async (target: umamusumeDoc, param: any) => {
     switch (target) {
         case umamusumeDoc.uma_home: fn = "saveHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "saveLivePreset"; break;
-        default: throw new Error("invalid request recieved")
+        default: throw new Error("recieved invalid request")
     }
     return await tauri.invoke<any>(fn, { param: param })
 }
@@ -44,7 +44,7 @@ export const updatePreset = async (target: umamusumeDoc, param: {}) => {
     switch (target) {
         case umamusumeDoc.uma_home: fn = "updateHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "updateLivePreset"; break;
-        default: throw new Error("invalid request recieved")
+        default: throw new Error("recieved invalid request")
     }
     return await tauri.invoke<any>(fn, { param: param })
 }
@@ -54,7 +54,7 @@ export const deletePreset = async (target: umamusumeDoc, id: string) => {
     switch (target) {
         case umamusumeDoc.uma_home: fn = "deleteHomePreset"; break;
         case umamusumeDoc.uma_live: fn = "deleteLivePreset"; break;
-        default: throw new Error("invalid request recieved")
+        default: throw new Error("recieved invalid request")
     }
     return await tauri.invoke<any>(fn, { id: id })
 }

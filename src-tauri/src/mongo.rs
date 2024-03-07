@@ -1,14 +1,13 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use crate::_string;
 use mongodb::{
     bson::oid::ObjectId,
     options::{ClientOptions, ServerApi, ServerApiVersion},
     Client,
 };
 use serde::{Deserialize, Serialize};
-
-const MONGO_URI: &str = "mongodb://127.0.0.1:27017";
 
 #[readonly::make]
 #[derive(Serialize, Deserialize)]
@@ -23,7 +22,7 @@ pub struct Uma_home {
 
 #[readonly::make]
 #[derive(Serialize, Deserialize)]
-pub struct param_Uma_home {
+pub struct Param_Uma_home {
     pub charaID: i32,
     pub charaName: String,
     pub dressID: i32,
@@ -51,7 +50,7 @@ pub struct Uma_live {
 
 #[readonly::make]
 #[derive(Serialize, Deserialize)]
-pub struct param_Uma_live {
+pub struct Param_Uma_live {
     pub data: Vec<Uma_live_chara>
 }
 
@@ -76,7 +75,7 @@ impl serde::Serialize for MongoError {
 }
 
 pub async fn getMongoClient() -> Result<Client, mongodb::error::Error> {
-    let mut clientOption = ClientOptions::parse(MONGO_URI).await?;
+    let mut clientOption = ClientOptions::parse(_string::MONGO_URI).await?;
     let api = ServerApi::builder().version(ServerApiVersion::V1).build();
     clientOption.server_api = Some(api);
     Ok(Client::with_options(clientOption)?)

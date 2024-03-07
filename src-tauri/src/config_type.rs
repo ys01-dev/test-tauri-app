@@ -58,31 +58,46 @@ struct AutoUpdate {
 }
 
 #[derive(Serialize, Deserialize)]
-struct ReplaceHomeStandChar_data {
-    origCharId: i32,
-    newChrId: i32,
-    newClothId: i32
+pub struct ReplaceHomeStandChar_data {
+    pub origCharId: i32,
+    pub newChrId: i32,
+    pub newClothId: i32
 }
 
 #[derive(Serialize, Deserialize)]
-struct ReplaceHomeStandChar {
-    enable: bool,
-    data: Vec<ReplaceHomeStandChar_data>
+pub struct ReplaceHomeStandChar {
+    pub enable: bool,
+    pub data: Vec<ReplaceHomeStandChar_data>
 }
 
 #[derive(Serialize, Deserialize)]
-struct ReplaceGlobalChar_data {
-    origCharId: i32,
-    newChrId: i32,
-    newClothId: i32,
-    replaceMini: bool
+pub struct Param_ReplaceHomeStandChar {
+    pub enable: bool,
+    pub data: Vec<ReplaceHomeStandChar_data>,
+    pub isOrgChange: bool
 }
 
 #[derive(Serialize, Deserialize)]
-struct ReplaceGlobalChar {
-    enable: bool,
-    replaceUniversal: bool,
-    data: Vec<ReplaceGlobalChar_data>
+pub struct ReplaceGlobalChar_data {
+    pub origCharId: i32,
+    pub newChrId: i32,
+    pub newClothId: i32,
+    pub replaceMini: bool
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ReplaceGlobalChar {
+    pub enable: bool,
+    pub replaceUniversal: bool,
+    pub data: Vec<ReplaceGlobalChar_data>
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Param_ReplaceGlobalChar {
+    pub isOrgChange: bool,
+    pub enable: bool,
+    pub replaceUniversal: bool,
+    pub data: Vec<ReplaceGlobalChar_data>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -98,7 +113,7 @@ struct CustomPath {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct config_json {
+pub struct Config_json {
     enableConsole: bool,
     enableLogger: bool,
     dumpStaticEntries: bool,
@@ -139,11 +154,29 @@ pub struct config_json {
     race_jikkyo_message_dict: String,
     autoUpdate: AutoUpdate,
     enableBuiltinAutoUpdate: bool,
-    replaceHomeStandChar: ReplaceHomeStandChar,
-    replaceGlobalChar: ReplaceGlobalChar,
+    pub replaceHomeStandChar: ReplaceHomeStandChar,
+    pub replaceGlobalChar: ReplaceGlobalChar,
     loadDll: Vec<String>,
     raceInfoTab: RaceInfoTab,
     customPath: CustomPath,
     uploadGachaHistory: bool,
     cutin_first_persion: bool
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigError {
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+    #[error(transparent)]
+    SerdeError(#[from] serde_json::Error),
+    #[error("invalid json props were detected")]
+    JsonParseError,
+}
+impl serde::Serialize for ConfigError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
+    }
 }
