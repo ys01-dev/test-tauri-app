@@ -2,10 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(non_snake_case)]
 
+mod _string;
 mod config_type;
 mod mongo;
 mod pg;
-mod _string;
 
 use crate::config_type::ReplaceGlobalChar;
 use bson::oid::ObjectId;
@@ -22,21 +22,21 @@ use std::{fs::File, io::BufReader};
 fn getCharaData(name: String) -> Result<String, pg::PGError> {
     let mut client = Client::connect(getConnStr().as_str(), NoTls)?;
     let data: Vec<chara_name_data> = client
-        .query(getCharaDml(&name).as_str(), &[])?
+        .query(getCharaDml().as_str(), &[&format!("%{}%", &name)])?
         .iter()
         .map(|row| chara_name_data {
-            id: row.get(0),
-            chara_name: row.get(1),
-            chara_voice: row.get(2),
-            birth_year: row.get(3),
-            birth_month: row.get(4),
-            birth_day: row.get(5),
-            sex: row.get(6),
-            height: row.get(7),
-            bust: row.get(8),
-            scale: row.get(9),
-            skin: row.get(10),
-            chara_category: row.get(11),
+            id: row.get("id"),
+            chara_name: row.get("chara_name"),
+            chara_voice: row.get("chara_voice"),
+            birth_year: row.get("birth_year"),
+            birth_month: row.get("birth_month"),
+            birth_day: row.get("birth_day"),
+            sex: row.get("sex"),
+            height: row.get("height"),
+            bust: row.get("bust"),
+            scale: row.get("scale"),
+            skin: row.get("skin"),
+            chara_category: row.get("chara_category"),
         })
         .collect();
     Ok(serde_json::to_string_pretty(&data)?)
@@ -45,15 +45,25 @@ fn getCharaData(name: String) -> Result<String, pg::PGError> {
 #[tauri::command]
 fn getDressData(name: String) -> Result<String, pg::PGError> {
     let mut client = Client::connect(getConnStr().as_str(), NoTls)?;
-    let data: Vec<dress_name_data> = client
-        .query(getDressDml(&name).as_str(), &[])?
+    let res = if name.len() == 0 {
+        client.query(getDressDml(&name).as_str(), &[])?
+    } else {
+        client.query(getDressDml(&name).as_str(), &[&format!("%{}%", &name)])?
+    };
+    let data: Vec<dress_name_data> = res
         .iter()
-        .map(|row| dress_name_data {
-            id: row.get(0),
-            dress_name: row.get(1),
-            dress_desc: row.get(2),
-            chara_id: row.get(3),
-            chara_name: row.get(4),
+        .map(|row| {
+            let res_chara_name: Option<String> = row.get("chara_name");
+            dress_name_data {
+                id: row.get("id"),
+                dress_name: row.get("dress_name"),
+                dress_desc: row.get("dress_desc"),
+                chara_id: row.get("chara_id"),
+                chara_name: match res_chara_name {
+                    Some(x) => x,
+                    None => "".into(),
+                },
+            }
         })
         .collect();
     Ok(serde_json::to_string_pretty(&data)?)
@@ -165,25 +175,42 @@ async fn deleteLivePreset(id: ObjectId) -> Result<String, mongo::MongoError> {
 #[tauri::command]
 fn changeConfigHome(param: Param_ReplaceHomeStandChar) -> Result<String, config_type::ConfigError> {
     let file = File::open(_string::CONFIG_PATH)?;
-    let mut configJson = serde_json::from_reader::<BufReader<File>, Config_json>(BufReader::new(file))?;
+    let mut configJson =
+        serde_json::from_reader::<BufReader<File>, Config_json>(BufReader::new(file))?;
 
     configJson.replaceHomeStandChar.enable = param.enable;
     if param.enable {
         if param.isOrgChange {
             if match param.data.get(0) {
+                Some(_) => 1,
+                None => -1,
+            } < 0
+                || match configJson.replaceHomeStandChar.data.get(0) {
                     Some(_) => 1,
-                    None => -1
-                } < 0 || match configJson.replaceHomeStandChar.data.get(0) {
-                        Some(_) => 1,
-                        None => -1
+                    None => -1,
                 } < 0
             {
                 return Err(config_type::ConfigError::JsonParseError);
             };
-            configJson.replaceHomeStandChar.data.get_mut(0).unwrap().origCharId = param.data.get(0).unwrap().origCharId;
+            configJson
+                .replaceHomeStandChar
+                .data
+                .get_mut(0)
+                .unwrap()
+                .origCharId = param.data.get(0).unwrap().origCharId;
         };
-        configJson.replaceHomeStandChar.data.get_mut(0).unwrap().newChrId = param.data.get(0).unwrap().newChrId;
-        configJson.replaceHomeStandChar.data.get_mut(0).unwrap().newClothId = param.data.get(0).unwrap().newClothId;
+        configJson
+            .replaceHomeStandChar
+            .data
+            .get_mut(0)
+            .unwrap()
+            .newChrId = param.data.get(0).unwrap().newChrId;
+        configJson
+            .replaceHomeStandChar
+            .data
+            .get_mut(0)
+            .unwrap()
+            .newClothId = param.data.get(0).unwrap().newClothId;
     }
 
     let targetFile = File::create(_string::CONFIG_PATH)?;
@@ -194,7 +221,8 @@ fn changeConfigHome(param: Param_ReplaceHomeStandChar) -> Result<String, config_
 #[tauri::command]
 fn changeConfigLive(param: ReplaceGlobalChar) -> Result<String, config_type::ConfigError> {
     let file = File::open(_string::CONFIG_PATH)?;
-    let mut configJson = serde_json::from_reader::<BufReader<File>, Config_json>(BufReader::new(file))?;
+    let mut configJson =
+        serde_json::from_reader::<BufReader<File>, Config_json>(BufReader::new(file))?;
 
     configJson.replaceGlobalChar.enable = param.enable;
     if param.enable {
@@ -203,7 +231,7 @@ fn changeConfigLive(param: ReplaceGlobalChar) -> Result<String, config_type::Con
             if item.newChrId != 0 && item.newClothId != 0 && item.origCharId != 0 {
                 data.push(item);
             };
-        };
+        }
         configJson.replaceGlobalChar.data = data;
     }
 

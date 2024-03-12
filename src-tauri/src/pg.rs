@@ -41,7 +41,7 @@ pub enum PGError {
     #[error(transparent)]
     PgError(#[from] postgres::error::Error),
     #[error(transparent)]
-    SerdeError(#[from] serde_json::error::Error)
+    SerdeError(#[from] serde_json::error::Error),
 }
 impl serde::Serialize for PGError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -60,21 +60,20 @@ pub fn getConnStr() -> String {
 }
 
 pub fn getDressDml(name: &String) -> String {
-    if name != "" {
-        format!(
-            "select id, dress_name, dress_desc, chara_id, case when chara_name is null then '' else chara_name end chara_name from dress_name_data where chara_name like '%{}%' order by id"
-            , name)
-    } else {
-        "select id, dress_name, dress_desc, chara_id, case when chara_name is null then '' else chara_name end chara_name from dress_name_data where chara_name is null order by id"
-        .into()
+    match name.len() {
+        0 => {
+            r"select * from dress_name_data where chara_name is null order by id"
+            .into()
+        }
+        _ => {
+            r"select * from dress_name_data where chara_name like $1 order by id"
+            .into()
+        }
     }
 }
 
-pub fn getCharaDml(name: &String) -> String {
-    format!(
-        "select * from chara_name_data where chara_name like '%{}%' order by id",
-        name
-    )
+pub fn getCharaDml() -> String {
+    "select * from chara_name_data where chara_name like $1 order by id".into()
 }
 
 // fn getPGConfig() -> deadpool_postgres::Config {

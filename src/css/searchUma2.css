@@ -40,7 +40,7 @@
         .liveCharaListContainer {
             div {
                 text-align: left;
-                width: 700px;
+                width: fit-content;
             }
 
             .btnRemove {
